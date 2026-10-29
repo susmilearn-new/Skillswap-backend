@@ -2,6 +2,7 @@ const express = require('express');
 const app = express()
 const connectDB = require('./config/dbConnection')
 const cookieParser = require("cookie-parser")
+const cors = require("cors")
 const authRoutes = require('./routes/authRoutes')
 const userRoutes = require('./routes/userRoutes')
 const skillRoutes = require('./routes/skillRoutes')
@@ -12,6 +13,15 @@ require('dotenv').config()
 
 connectDB()
 const port = process.env.PORT || 3000
+
+app.use(
+    cors({
+        origin: process.env.CLIENT_URL,
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    })
+);
 
 app.use(express.json());
 app.use(cookieParser()) 
