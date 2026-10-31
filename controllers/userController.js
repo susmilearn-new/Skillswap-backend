@@ -4,8 +4,9 @@ const User = require("../models/user");
 // Get all public profiles
 const getUsers = async (req, res) => {
   try {
-    const users = await User.find()
-      .select("-password");
+    const users = await User.find({
+      _id: { $ne: req.user.id },
+    }).select("-password");
 
     res.status(200).json({
       count: users.length,

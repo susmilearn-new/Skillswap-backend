@@ -101,9 +101,11 @@ const updateSkill = async (req, res) => {
       });
     }
 
+    const { title, category, description, tags, level } = req.body;
+
     const updatedSkill = await Skill.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      { title, category, description, tags, level },
       { new: true, runValidators: true }
     );
 
