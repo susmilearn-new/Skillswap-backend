@@ -9,6 +9,7 @@ const matchRoutes = require('./routes/matchRoutes')
 const analyticsRoutes = require('./routes/analyticsRoutes')
 const skillCatalogueRoutes = require('./routes/skillCatalogueRoutes')
 const swapRequestRoutes = require('./routes/swapRequestRoutes')
+const trendsRoutes = require("./routes/trendsRoutes");
 
 require('dotenv').config()
 
@@ -33,6 +34,7 @@ app.use("/api/matches", matchRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/skill-catalogue", skillCatalogueRoutes);
 app.use("/api/swap-requests", swapRequestRoutes);
+app.use("/api/trends", trendsRoutes);
 
 app.listen(port, () => {
   console.log(`Skillswap app listening on port ${port}`)

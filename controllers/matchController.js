@@ -112,22 +112,27 @@ const getMatches = async (req, res) => {
 
       Candidates:
       ${JSON.stringify(
-        users.map((c) => ({
-          id: c._id,
-          name: c.name,
-          skillsToTeach: c.skillsToTeach || [],
-          skillsToLearn: c.skillsToLearn || [],
-        }))
-      )}
+      users.map((c) => ({
+        id: c._id,
+        name: c.name,
+        skillsToTeach: c.skillsToTeach || [],
+        skillsToLearn: c.skillsToLearn || [],
+      }))
+    )}
 
-      Task: Score each candidate from 0 to 100 based on skill compatibility. Provide a brief match reason.
-      
-      Respond STRICTLY in valid JSON format:
-      {
-        "matches": [
-          { "candidateId": "id_here", "matchScore": 85, "matchReason": "Reason here..." }
-        ]
-      }
+      Task:
+Evaluate EVERY candidate individually.
+
+Assign a compatibility score from 0 to 100 based on:
+- How well the candidate can teach skills the current user wants to learn.
+- How well the candidate wants to learn skills the current user can teach.
+- Semantic similarity between related skills.
+
+Return exactly one result for every candidate.
+Do not omit candidates, even if their compatibility score is 0.
+
+Provide a short explanation for each score.
+Return valid JSON only.
     `;
 
     let aiScoredList = [];
@@ -161,21 +166,32 @@ const getMatches = async (req, res) => {
     const matches = users
       .map((user) => {
         const aiMeta = aiScoredList.find(
-          (m) => m.candidateId.toString() === user._id.toString()
+          (m) =>
+            String(m.candidateId) === String(user._id)
         );
 
-        let matchScore = aiMeta ? aiMeta.matchScore : null;
-        let matchReason = aiMeta ? aiMeta.matchReason : null;
+        let matchScore =
+          aiMeta &&
+            Number.isFinite(Number(aiMeta.matchScore)) &&
+            Number(aiMeta.matchScore) >= 0 &&
+            Number(aiMeta.matchScore) <= 100
+            ? Number(aiMeta.matchScore)
+            : null;
+
+        let matchReason =
+          matchScore !== null
+            ? aiMeta.matchReason || "AI-based skill compatibility."
+            : null;
 
         // Fallback calculation if AI failed or didn't return a score for this user
         if (matchScore === null) {
           const userTeach = user.skillsToTeach || [];
           const userLearn = user.skillsToLearn || [];
-          
+
           const normalize = (s) => s.trim().toLowerCase();
           const sharedTeach = myLearn.filter((s) => userTeach.some((item) => normalize(item) === normalize(s)));
           const sharedLearn = myTeach.filter((s) => userLearn.some((item) => normalize(item) === normalize(s)));
-          
+
           const totalMatches = sharedTeach.length + sharedLearn.length;
           if (totalMatches === 0) return null;
 
