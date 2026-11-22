@@ -3,9 +3,7 @@ const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const { Resend } = require("resend");
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+const nodemailer = require("nodemailer");
 
 // Register
 const register = async (req, res) => {
@@ -190,56 +188,59 @@ const forgotPassword = async (req, res) => {
 
     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-    const { data, error } = await resend.emails.send({
-      from: "SkillSwap <onboarding@resend.dev>",
-      to: [user.email],
-      subject: "SkillSwap Password Reset",
-      html: `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-      <h2>Reset Your SkillSwap Password</h2>
-
-      <p>Hello ${user.name},</p>
-
-      <p>
-        We received a request to reset your SkillSwap password.
-      </p>
-
-      <p>
-        Click the button below to create a new password:
-      </p>
-
-      <a
-        href="${resetUrl}"
-        style="
-          display: inline-block;
-          padding: 12px 20px;
-          background-color: #32106f;
-          color: white;
-          text-decoration: none;
-          border-radius: 25px;
-        "
-      >
-        Reset Password
-      </a>
-
-      <p>
-        This link will expire in 15 minutes.
-      </p>
-
-      <p>
-        If you did not request a password reset, you can safely ignore
-        this email.
-      </p>
-
-      <p>Thanks,<br />SkillSwap Team</p>
-    </div>
-  `,
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
     });
 
-    if (error) {
-      console.error("Resend email error:", error);
-      throw new Error("Failed to send password reset email");
-    }
+    await transporter.sendMail({
+      from: `"SkillSwap" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "SkillSwap Password Reset",
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <h2>Reset Your SkillSwap Password</h2>
+
+          <p>Hello ${user.name},</p>
+
+          <p>
+            We received a request to reset your SkillSwap password.
+          </p>
+
+          <p>
+            Click the button below to create a new password:
+          </p>
+
+          <a
+            href="${resetUrl}"
+            style="
+              display: inline-block;
+              padding: 12px 20px;
+              background-color: #32106f;
+              color: white;
+              text-decoration: none;
+              border-radius: 25px;
+            "
+          >
+            Reset Password
+          </a>
+
+          <p>
+            This link will expire in 15 minutes.
+          </p>
+
+          <p>
+            If you did not request a password reset, you can safely ignore
+            this email.
+          </p>
+
+          <p>Thanks,<br />SkillSwap Team</p>
+        </div>
+      `,
+    });
 
     return res.status(200).json({
       message:
