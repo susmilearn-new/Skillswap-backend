@@ -189,7 +189,10 @@ const forgotPassword = async (req, res) => {
     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      // service: "gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -197,12 +200,12 @@ const forgotPassword = async (req, res) => {
     });
 
     transporter.verify((error, success) => {
-  if (error) {
-    console.log("Email transporter error:", error);
-  } else {
-    console.log("Email server is ready");
-  }
-});
+      if (error) {
+        console.log("Email transporter error:", error);
+      } else {
+        console.log("Email server is ready");
+      }
+    });
 
     await transporter.sendMail({
       from: `"SkillSwap" <${process.env.EMAIL_USER}>`,
